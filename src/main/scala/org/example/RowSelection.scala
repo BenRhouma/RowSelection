@@ -23,10 +23,13 @@ case class Dimension(id: String)
  * Rows are double dimensions arrays.
  * Each row is viewed as 2 concatened sequence: one of strings for dimension values, the others of numerics.
  *
+ *
+ *
+ * gather google analytics data in a form of list of tuple
  * Ex:
  * ["ga:origin", "ga:browser"] ["ga:visits", "ga:timeOnSite"]
  * ["France", "Chrome"] [20.0, 345.5]
- * Assumptions :
+ * Assumptions : some data
  * ["France", "Chrome"] [20.0, 345.5]
  * ["France", "Chrome"] [15.0, 10.5]
  * ["France", "Chrome"] [22.0, 345.5]
@@ -35,6 +38,8 @@ case class Dimension(id: String)
  * ["Tunisia", "Chrome"] [25.0, 345.5]
  * ["Tunisia", "Firefox"] [17.0, 290.5]
  * ["Tunisia", "IE8"] [1.0, 20.5]
+ *
+ *
  */
 
 case class RowSelection(
@@ -66,20 +71,25 @@ case class RowSelection(
     this.copy(dimensionRows = x , metricRows = mt)
   }
 
-
+  /**
+    *
+    * @param col : list of dimension used to filter the result
+    * @param values : values of every dimension to filter exp : ("France","Chrome") or ("Tunisia", "Firefox")
+    * @return : RowSelection of filtered rows
+    */
   def filter(col: Seq[Dimension], values: IndexedSeq[String]): RowSelection = {
 
     val res = this.dimensionRows zip this.metricRows
     val filteredList = res.filter{
       case (d,m)=>
-       var verif : Boolean = true
+       var filterRow : Boolean = true
         for(dimension<-col){
           // dimension index within the Seq
           val index = this.dimensionHeaders.indexOf(dimension)
           if(!d(index).equals(values(index)))
-            verif = false
+            filterRow = false
         }
-      verif
+      filterRow
     }
 
     val mt : Seq[IndexedSeq[Double]]=for(e  <- filteredList)
@@ -89,6 +99,7 @@ case class RowSelection(
 
     this.copy(dimensionRows = md , metricRows = mt)
   }
+
 
 
   def groupByColumns(cols: Seq[Dimension]): RowSelection = {
